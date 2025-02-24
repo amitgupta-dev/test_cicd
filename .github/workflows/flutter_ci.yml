@@ -1,6 +1,5 @@
 name: Flutter CI
 
-# Trigger the workflow on push or pull request to the main branch
 on:
   push:
     branches:
@@ -9,30 +8,49 @@ on:
     branches:
       - main
 
-# Define the jobs to run
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.4' # Specify your Flutter version here
+          flutter-version: '3.27.4'
 
-      # Install dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Run tests
       - name: Run tests
         run: flutter test
 
-      # Build the app (optional)
       - name: Build APK
         run: flutter build apk --release
+
+      # Upload APK as an artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      # Send APK to Slack
+      - name: Send APK to Slack
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "A new APK is ready for testing!",
+              "attachments": [
+                {
+                  "title": "Download APK",
+                  "title_link": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": "Click the link above to download the APK from the GitHub Actions artifacts."
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/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"
