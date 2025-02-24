@@ -43,7 +43,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "A new APK is ready for testing!",
+              "text": "A new APK is ready for testing!\n Download APK\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} ",
               "attachments": [
                 {
                   "title": "Download APK",
