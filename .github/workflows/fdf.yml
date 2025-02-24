@@ -1,0 +1,89 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_android:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yano_app.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+    #   - name: Send APK to Slack
+    #     uses: slackapi/slack-github-action@v1
+    #     with:
+    #       payload: |
+    #         {
+    #           "text": "A new APK is ready for testing!\nDownload APK\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+    #         }
+    #     env:
+    #       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  build_ios:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build iOS
+        run: |
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload
+          zip -r app.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: yano_app.ipa
+          path: build/ios/iphoneos/app.ipa
+
+    #   - name: Send IPA to Slack
+    #     uses: slackapi/slack-github-action@v1
+    #     with:
+    #       payload: |
+    #         {
+    #           "text": "A new iOS build is ready for testing!\nDownload IPA\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+    #         }
+    #     env:
+    #       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
